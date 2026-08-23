@@ -104,8 +104,21 @@
     function displayToDoTasks(tasks) {
         todoCounter.innerHTML = `${tasks.length} tasks`;
         tasksToDo.innerHTML = "";
-        tasks.forEach((task, index) => {
-            tasksToDo.innerHTML += `
+        if (tasks.length === 0) {
+            tasksToDo.innerHTML = `         <div
+                  class="flex flex-col items-center justify-center py-12 text-slate-400"
+                >
+                  <i
+                    class="fa-regular fa-folder-open text-4xl mb-3 opacity-50"
+                  ></i>
+                  <p class="text-sm">No tasks yet</p>
+                  <p class="text-xs mt-1">Click + to add one</p>
+                </div>
+      `;
+        }
+        else {
+            tasks.forEach((task, index) => {
+                tasksToDo.innerHTML += `
     <div class="group bg-white rounded-xl p-4 shadow-sm border border-slate-100 hover:shadow-md hover:border-slate-200 transition-all duration-200  " data-task-id="task-1787482776610-2hw9mld">
         <!-- Top Bar -->
         <div class="flex items-center justify-between mb-3">
@@ -175,14 +188,17 @@
       
         </div>
       </div>`;
-        });
+            });
+        }
     }
     function editTask(index) {
         currentIndex = index;
         taskTitle.value = tasks[index].title;
-        taskPriority.value = tasks[index].priority ? tasks[index].priority : '';
-        taskDueDate.value = tasks[index].date ? tasks[index].date : '';
-        taskDescription.value = tasks[index].description ? tasks[index].description : '';
+        taskPriority.value = tasks[index].priority ? tasks[index].priority : "";
+        taskDueDate.value = tasks[index].date ? tasks[index].date : "";
+        taskDescription.value = tasks[index].description
+            ? tasks[index].description
+            : "";
         openModal();
     }
     function deleteTask(index) {
@@ -205,4 +221,5 @@
             return;
         }
     });
+    //-----------In Progress Tasks----------//
 })();

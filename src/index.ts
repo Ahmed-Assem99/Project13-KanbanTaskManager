@@ -24,9 +24,10 @@
   const tasksToDo: HTMLDivElement | null =
     document.querySelector("#tasks-todo");
   const todoCounter = document.querySelector("#todo-counter");
-  const inProgressBtn1:HTMLButtonElement|null=document.querySelector("#inprogress-btn1")
-  const completeBtn1:HTMLButtonElement|null=document.querySelector("#complete-btn1")
-
+  const inProgressBtn1: HTMLButtonElement | null =
+    document.querySelector("#inprogress-btn1");
+  const completeBtn1: HTMLButtonElement | null =
+    document.querySelector("#complete-btn1");
 
   interface Task {
     title: string;
@@ -38,10 +39,10 @@
   let tasks: Array<Task>;
   tasks = JSON.parse(localStorage.getItem("TaskHistory") ?? "[]");
   displayToDoTasks(tasks);
-let currentIndex:number|undefined=undefined;
-  let inProgressTasks: Array<Task>=[];
-  let completedTasks: Array<Task>=[];
-//-------Modal Overlay Features------///
+  let currentIndex: number | undefined = undefined;
+  let inProgressTasks: Array<Task> = [];
+  let completedTasks: Array<Task> = [];
+  //-------Modal Overlay Features------///
   function closeModal(): void {
     modalOverlay?.classList.add("hidden");
     modalOverlay?.classList.remove("flex");
@@ -120,7 +121,7 @@ let currentIndex:number|undefined=undefined;
       closeModal();
     }
   });
-//-------------Todo Tasks Features---------------//
+  //-------------Todo Tasks Features---------------//
   function addNewTask(): void {
     let newTask: Task = {
       title: taskTitle!.value,
@@ -128,12 +129,12 @@ let currentIndex:number|undefined=undefined;
       date: taskDueDate?.value,
       description: taskDescription?.value,
     };
-    console.log(currentIndex)
-    if(currentIndex==null){
-    tasks.push(newTask);}
-    else{
-      tasks[currentIndex]=newTask;
-      currentIndex=undefined;
+    console.log(currentIndex);
+    if (currentIndex == null) {
+      tasks.push(newTask);
+    } else {
+      tasks[currentIndex] = newTask;
+      currentIndex = undefined;
     }
 
     localStorage.setItem("TaskHistory", JSON.stringify(tasks));
@@ -148,15 +149,23 @@ let currentIndex:number|undefined=undefined;
     taskDescription!.value = "";
   }
 
- 
-
-
   function displayToDoTasks(tasks: Array<Task>): void {
     todoCounter!.innerHTML = `${tasks.length} tasks`;
     tasksToDo!.innerHTML = "";
-
-    tasks.forEach((task, index) => {
-      tasksToDo!.innerHTML += `
+    if (tasks.length === 0) {
+      tasksToDo!.innerHTML = `         <div
+                  class="flex flex-col items-center justify-center py-12 text-slate-400"
+                >
+                  <i
+                    class="fa-regular fa-folder-open text-4xl mb-3 opacity-50"
+                  ></i>
+                  <p class="text-sm">No tasks yet</p>
+                  <p class="text-xs mt-1">Click + to add one</p>
+                </div>
+      `;
+    } else {
+      tasks.forEach((task, index) => {
+        tasksToDo!.innerHTML += `
     <div class="group bg-white rounded-xl p-4 shadow-sm border border-slate-100 hover:shadow-md hover:border-slate-200 transition-all duration-200  " data-task-id="task-1787482776610-2hw9mld">
         <!-- Top Bar -->
         <div class="flex items-center justify-between mb-3">
@@ -226,44 +235,48 @@ let currentIndex:number|undefined=undefined;
       
         </div>
       </div>`;
-    });
+      });
+    }
   }
- 
 
- function editTask(index:number):void{
-    currentIndex=index;
+  function editTask(index: number): void {
+    currentIndex = index;
     taskTitle!.value = tasks[index].title;
-    taskPriority!.value = tasks[index].priority?tasks[index].priority:'';
-    taskDueDate!.value = tasks[index].date?tasks[index].date:'';
-    taskDescription!.value = tasks[index].description?tasks[index].description:'';
-  openModal();
+    taskPriority!.value = tasks[index].priority ? tasks[index].priority : "";
+    taskDueDate!.value = tasks[index].date ? tasks[index].date : "";
+    taskDescription!.value = tasks[index].description
+      ? tasks[index].description
+      : "";
+    openModal();
   }
-  function deleteTask(index:number):void{
-    tasks.splice(index,1)
+  function deleteTask(index: number): void {
+    tasks.splice(index, 1);
     localStorage.setItem("TaskHistory", JSON.stringify(tasks));
     displayToDoTasks(tasks);
   }
-  
-tasksToDo?.addEventListener("click", (e) => {
-  const target = e.target as HTMLElement;
 
-  const editButton = target.closest(".edit-btn") as HTMLButtonElement | null;
-  const deleteButton = target.closest(".delete-btn") as HTMLButtonElement | null;
+  tasksToDo?.addEventListener("click", (e) => {
+    const target = e.target as HTMLElement;
 
-  if (editButton) {
-    const editIndex = Number(editButton.dataset.index);
-    editTask(editIndex);
-    return;
-  }
+    const editButton = target.closest(".edit-btn") as HTMLButtonElement | null;
+    const deleteButton = target.closest(
+      ".delete-btn",
+    ) as HTMLButtonElement | null;
 
-  if (deleteButton) {
-    const deleteIndex = Number(deleteButton.dataset.index);
-    deleteTask(deleteIndex);
-    return;
-  }
-});
+    if (editButton) {
+      const editIndex = Number(editButton.dataset.index);
+      editTask(editIndex);
+      return;
+    }
+
+    if (deleteButton) {
+      const deleteIndex = Number(deleteButton.dataset.index);
+      deleteTask(deleteIndex);
+      return;
+    }
+  });
 
 
 
-
+  //-----------In Progress Tasks----------//
 })();
