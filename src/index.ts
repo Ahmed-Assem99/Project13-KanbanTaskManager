@@ -24,6 +24,9 @@
   const tasksToDo: HTMLDivElement | null =
     document.querySelector("#tasks-todo");
   const todoCounter = document.querySelector("#todo-counter");
+  const inProgressBtn1:HTMLButtonElement|null=document.querySelector("#inprogress-btn1")
+  const completeBtn1:HTMLButtonElement|null=document.querySelector("#complete-btn1")
+
 
   interface Task {
     title: string;
@@ -35,10 +38,10 @@
   let tasks: Array<Task>;
   tasks = JSON.parse(localStorage.getItem("TaskHistory") ?? "[]");
   displayToDoTasks(tasks);
-
-  let inProgressTasks: Array<Task>;
-  let completedTasks: Array<Task>;
-
+let currentIndex:number|undefined=undefined;
+  let inProgressTasks: Array<Task>=[];
+  let completedTasks: Array<Task>=[];
+//-------Modal Overlay Features------///
   function closeModal(): void {
     modalOverlay?.classList.add("hidden");
     modalOverlay?.classList.remove("flex");
@@ -64,7 +67,6 @@
   cancelBtn?.addEventListener("click", (e) => {
     closeModal();
   });
-
   submitBtn?.addEventListener("click", (e) => {
     e.preventDefault();
     if (!taskTitle?.value) {
@@ -118,7 +120,7 @@
       closeModal();
     }
   });
-
+//-------------Todo Tasks Features---------------//
   function addNewTask(): void {
     let newTask: Task = {
       title: taskTitle!.value,
@@ -126,7 +128,13 @@
       date: taskDueDate?.value,
       description: taskDescription?.value,
     };
-    tasks.push(newTask);
+    console.log(currentIndex)
+    if(currentIndex==null){
+    tasks.push(newTask);}
+    else{
+      tasks[currentIndex]=newTask;
+      currentIndex=undefined;
+    }
 
     localStorage.setItem("TaskHistory", JSON.stringify(tasks));
     clearForum();
@@ -139,6 +147,9 @@
     taskDueDate!.value = "";
     taskDescription!.value = "";
   }
+
+ 
+
 
   function displayToDoTasks(tasks: Array<Task>): void {
     todoCounter!.innerHTML = `${tasks.length} tasks`;
@@ -154,10 +165,10 @@
             <span class="text-[10px] font-medium text-slate-400 uppercase tracking-wider">#${String(index + 1).padStart(3, "0")}</span>
           </div>
           <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button class="edit-btn text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 w-7 h-7 rounded-lg flex items-center justify-center transition-colors" data-task-id="task-1787482776610-2hw9mld" title="Edit task">
+            <button class="edit-btn text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 w-7 h-7 rounded-lg flex items-center justify-center transition-colors" data-index="${index}" title="Edit task">
               <i class="fa-solid fa-pen text-xs pointer-events-none"></i>
             </button>
-            <button class="delete-btn text-slate-400 hover:text-red-500 hover:bg-red-50 w-7 h-7 rounded-lg flex items-center justify-center transition-colors" data-task-id="task-1787482776610-2hw9mld" title="Delete task">
+            <button class="delete-btn text-slate-400 hover:text-red-500 hover:bg-red-50 w-7 h-7 rounded-lg flex items-center justify-center transition-colors" data-index="${index}" title="Delete task">
               <i class="fa-solid fa-trash-can text-xs pointer-events-none"></i>
             </button>
           </div>
@@ -205,11 +216,11 @@
         <!-- Action Buttons -->
         <div class="flex flex-wrap gap-2">
           
-        <button class="status-btn text-[11px] px-3 py-2 rounded-lg font-semibold transition-all duration-200 flex items-center gap-1.5 hover:scale-105 active:scale-95 bg-amber-100 text-amber-700 hover:bg-amber-200" data-task-id="task-1787482776610-2hw9mld" data-status="in-progress">
+        <button id="inprogress-btn1" class="status-btn text-[11px] px-3 py-2 rounded-lg font-semibold transition-all duration-200 flex items-center gap-1.5 hover:scale-105 active:scale-95 bg-amber-100 text-amber-700 hover:bg-amber-200" data-task-id="task-1787482776610-2hw9mld" data-status="in-progress">
           <i class="fa-solid fa-play pointer-events-none"></i> <span class="pointer-events-none">Start</span>
         </button>
       
-        <button class="status-btn text-[11px] px-3 py-2 rounded-lg font-semibold transition-all duration-200 flex items-center gap-1.5 hover:scale-105 active:scale-95 bg-emerald-100 text-emerald-700 hover:bg-emerald-200" data-task-id="task-1787482776610-2hw9mld" data-status="completed">
+        <button id="complete-btn1" class="status-btn text-[11px] px-3 py-2 rounded-lg font-semibold transition-all duration-200 flex items-center gap-1.5 hover:scale-105 active:scale-95 bg-emerald-100 text-emerald-700 hover:bg-emerald-200" data-task-id="task-1787482776610-2hw9mld" data-status="completed">
           <i class="fa-solid fa-check pointer-events-none"></i> <span class="pointer-events-none">Complete</span>
         </button>
       
@@ -217,12 +228,42 @@
       </div>`;
     });
   }
+ 
 
-
-
-
-
-
-
+ function editTask(index:number):void{
+    currentIndex=index;
+    taskTitle!.value = tasks[index].title;
+    taskPriority!.value = tasks[index].priority?tasks[index].priority:'';
+    taskDueDate!.value = tasks[index].date?tasks[index].date:'';
+    taskDescription!.value = tasks[index].description?tasks[index].description:'';
+  openModal();
+  }
+  function deleteTask(index:number):void{
+    tasks.splice(index,1)
+    localStorage.setItem("TaskHistory", JSON.stringify(tasks));
+    displayToDoTasks(tasks);
+  }
   
+tasksToDo?.addEventListener("click", (e) => {
+  const target = e.target as HTMLElement;
+
+  const editButton = target.closest(".edit-btn") as HTMLButtonElement | null;
+  const deleteButton = target.closest(".delete-btn") as HTMLButtonElement | null;
+
+  if (editButton) {
+    const editIndex = Number(editButton.dataset.index);
+    editTask(editIndex);
+    return;
+  }
+
+  if (deleteButton) {
+    const deleteIndex = Number(deleteButton.dataset.index);
+    deleteTask(deleteIndex);
+    return;
+  }
+});
+
+
+
+
 })();
