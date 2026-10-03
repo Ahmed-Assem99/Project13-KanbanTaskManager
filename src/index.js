@@ -22,6 +22,9 @@
         localStorage.setItem("taskIdCounter", String(id));
         return id;
     }
+    function formatCount(count) {
+        return `${count} ${count === 1 ? "task" : "tasks"}`;
+    }
     function formatId(id) {
         return String(id).padStart(3, "0");
     }
@@ -147,7 +150,7 @@
         delete submitBtn?.dataset.completedIndex;
     }
     function displayToDoTasks(tasks) {
-        todoCounter.innerHTML = `${tasks.length} tasks`;
+        todoCounter.innerHTML = formatCount(tasks.length);
         tasksToDo.innerHTML = "";
         if (tasks.length === 0) {
             tasksToDo.innerHTML = `         <div
@@ -291,7 +294,7 @@
     });
     function displayInProgressTasks(tasks) {
         tasksInProgress.innerHTML = "";
-        inProgressCounter.innerHTML = `${tasks.length} tasks`;
+        inProgressCounter.innerHTML = formatCount(tasks.length);
         if (tasks.length === 0) {
             tasksInProgress.innerHTML = `         <div
                   class="flex flex-col items-center justify-center py-12 text-slate-400"
@@ -492,7 +495,7 @@
         if (!tasksCompleted)
             return;
         if (completedCounter) {
-            completedCounter.innerHTML = `${tasks.length} tasks`;
+            completedCounter.innerHTML = formatCount(tasks.length);
         }
         tasksCompleted.innerHTML = "";
         if (tasks.length === 0) {

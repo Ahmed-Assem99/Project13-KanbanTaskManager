@@ -44,6 +44,10 @@
     return id;
   }
 
+  function formatCount(count: number): string {
+    return `${count} ${count === 1 ? "task" : "tasks"}`;
+  }
+
   function formatId(id: number): string {
     return String(id).padStart(3, "0");
   }
@@ -231,7 +235,7 @@
   }
 
   function displayToDoTasks(tasks: Array<Task>): void {
-    todoCounter!.innerHTML = `${tasks.length} tasks`;
+    todoCounter!.innerHTML = formatCount(tasks.length);
     tasksToDo!.innerHTML = "";
     if (tasks.length === 0) {
       tasksToDo!.innerHTML = `         <div
@@ -394,7 +398,7 @@
 
   function displayInProgressTasks(tasks: Array<Task>): void {
     tasksInProgress!.innerHTML = "";
-    inProgressCounter!.innerHTML = `${tasks.length} tasks`;
+    inProgressCounter!.innerHTML = formatCount(tasks.length);
     if (tasks.length === 0) {
       tasksInProgress!.innerHTML = `         <div
                   class="flex flex-col items-center justify-center py-12 text-slate-400"
@@ -686,7 +690,7 @@
     if (!tasksCompleted) return;
 
     if (completedCounter) {
-      completedCounter.innerHTML = `${tasks.length} tasks`;
+      completedCounter.innerHTML = formatCount(tasks.length);
     }
 
     tasksCompleted.innerHTML = "";
