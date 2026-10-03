@@ -32,6 +32,19 @@
         const daysLeft = Math.round((due.getTime() - start.getTime()) / 86400000);
         return daysLeft >= 0 && daysLeft <= 3;
     }
+    const PRIORITY_STYLES = {
+        low: { badge: "bg-green-50 text-green-600", dot: "bg-green-500" },
+        medium: { badge: "bg-amber-50 text-amber-600", dot: "bg-amber-500" },
+        high: { badge: "bg-red-50 text-red-600", dot: "bg-red-500" },
+    };
+    function priorityBadge(priority) {
+        const level = priority && priority in PRIORITY_STYLES ? priority : "medium";
+        const { badge, dot } = PRIORITY_STYLES[level];
+        return `<span class="${badge} text-[10px] font-semibold px-2 py-1 rounded-full flex items-center gap-1.5 uppercase tracking-wide">
+            <span class="w-1.5 h-1.5 rounded-full ${dot}"></span>
+            ${level}
+          </span>`;
+    }
     function formatCount(count) {
         return `${count} ${count === 1 ? "task" : "tasks"}`;
     }
@@ -208,10 +221,7 @@
         <!-- Tags Row -->
         <div class="flex flex-wrap items-center gap-2 mb-4">
           <!-- Priority Badge -->
-          <span class="bg-amber-50 text-amber-600 text-[10px] font-semibold px-2 py-1 rounded-full flex items-center gap-1.5 uppercase tracking-wide">
-            <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-            ${task.priority}
-          </span>
+          ${priorityBadge(task.priority)}
           
           ${isDueSoon(task.date)
                     ? `<span class="bg-orange-100 text-orange-600 text-[10px] font-semibold px-2 py-1 rounded-full uppercase tracking-wide">Due Soon</span>`
@@ -346,10 +356,7 @@
         <!-- Tags Row -->
         <div class="flex flex-wrap items-center gap-2 mb-4">
           <!-- Priority Badge -->
-          <span class="bg-amber-50 text-amber-600 text-[10px] font-semibold px-2 py-1 rounded-full flex items-center gap-1.5 uppercase tracking-wide">
-            <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-            ${task.priority}
-          </span>
+          ${priorityBadge(task.priority)}
           
           
         </div>
@@ -557,10 +564,7 @@
         <!-- Tags Row -->
         <div class="flex flex-wrap items-center gap-2 mb-4">
           <!-- Priority Badge -->
-          <span class="bg-amber-50 text-amber-600 text-[10px] font-semibold px-2 py-1 rounded-full flex items-center gap-1.5 uppercase tracking-wide">
-            <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-            ${task.priority}
-          </span>
+          ${priorityBadge(task.priority)}
           
           
           
