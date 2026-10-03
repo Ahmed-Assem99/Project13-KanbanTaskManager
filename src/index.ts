@@ -44,6 +44,17 @@
     return id;
   }
 
+  // True when the due date is today or within the next 3 days.
+  function isDueSoon(date?: string): boolean {
+    if (!date) return false;
+    const [year, month, day] = date.split("-").map(Number);
+    const today = new Date();
+    const start = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const due = new Date(year, month - 1, day);
+    const daysLeft = Math.round((due.getTime() - start.getTime()) / 86400000);
+    return daysLeft >= 0 && daysLeft <= 3;
+  }
+
   function formatCount(count: number): string {
     return `${count} ${count === 1 ? "task" : "tasks"}`;
   }
@@ -287,11 +298,11 @@
             ${task.priority}
           </span>
           
-          
-            <span class="bg-orange-100 text-orange-600 text-[10px] font-semibold px-2 py-1 rounded-full uppercase tracking-wide">
-              Due Soon
-            </span>
-          
+          ${
+            isDueSoon(task.date)
+              ? `<span class="bg-orange-100 text-orange-600 text-[10px] font-semibold px-2 py-1 rounded-full uppercase tracking-wide">Due Soon</span>`
+              : ""
+          }
         </div>
         <!-- Meta Info -->
         <div class="flex items-center gap-3 text-xs text-slate-400 pb-3 mb-3 border-b border-slate-100">
