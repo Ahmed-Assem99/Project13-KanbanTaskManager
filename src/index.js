@@ -25,7 +25,6 @@
     let currentProgressIndex = undefined;
     let completedTasks = JSON.parse(localStorage.getItem("completedTasks") ?? "[]");
     displayCompletedTasks(completedTasks);
-    //-------Modal Overlay Features------///
     function closeModal() {
         modalOverlay?.classList.add("hidden");
         modalOverlay?.classList.remove("flex");
@@ -77,7 +76,6 @@
             closeModal();
         }
     });
-    //-------------Todo Tasks Features---------------//
     function addNewTask() {
         const newTask = {
             title: taskTitle.value,
@@ -138,7 +136,7 @@
         else {
             tasks.forEach((task, index) => {
                 tasksToDo.innerHTML += `
-    <div class="group bg-white rounded-xl p-4 shadow-sm border border-slate-100 hover:shadow-md hover:border-slate-200 transition-all duration-200  " data-task-id="task-1787482776610-2hw9mld">
+    <div class="task-card group bg-white rounded-xl p-4 shadow-sm border border-slate-100 hover:shadow-md hover:border-slate-200 transition-all duration-200  " data-drag-status="todo" data-drag-index="${index}">
         <!-- Top Bar -->
         <div class="flex items-center justify-between mb-3">
           <div class="flex items-center gap-2">
@@ -263,7 +261,6 @@
             return;
         }
     });
-    //-----------In Progress Tasks----------//
     function displayInProgressTasks(tasks) {
         tasksInProgress.innerHTML = "";
         inProgressCounter.innerHTML = `${tasks.length} tasks`;
@@ -282,7 +279,7 @@
         else {
             tasks.forEach((task, index) => {
                 tasksInProgress.innerHTML += `
-<div class="group bg-white rounded-xl p-4 shadow-sm border border-slate-100 hover:shadow-md hover:border-slate-200 transition-all duration-200  " data-task-id="task-1787493091072-kkva6e3">
+<div class="task-card group bg-white rounded-xl p-4 shadow-sm border border-slate-100 hover:shadow-md hover:border-slate-200 transition-all duration-200  " data-drag-status="in-progress" data-drag-index="${index}">
         <!-- Top Bar -->
         <div class="flex items-center justify-between mb-3">
           <div class="flex items-center gap-2">
@@ -377,19 +374,16 @@
         const deleteButton = target.closest(".delete-btn");
         const inProgressButton = target.closest(".status-btn[data-status='todo']");
         const completedButton = target.closest(".status-btn[data-status='completed']");
-        // EDIT
         if (editButton) {
             const editIndex = Number(editButton.dataset.index);
             editProgressTask(editIndex);
             return;
         }
-        // DELETE
         if (deleteButton) {
             const deleteIndex = Number(deleteButton.dataset.index);
             deleteProgressTask(deleteIndex);
             return;
         }
-        // MOVE BACK TO TODO
         if (inProgressButton) {
             const todoIndex = Number(inProgressButton.dataset.index);
             tasks.push(inProgressTasks[todoIndex]);
@@ -400,14 +394,12 @@
             displayInProgressTasks(inProgressTasks);
             return;
         }
-        // MOVE TO COMPLETED
         if (completedButton) {
             const completedIndex = Number(completedButton.dataset.index);
             moveToCompleted(completedIndex);
             return;
         }
     });
-    //-----------Completed Tasks----------//
     const tasksCompleted = document.querySelector("#tasks-completed");
     tasksCompleted?.addEventListener("click", (e) => {
         const target = e.target;
@@ -487,7 +479,7 @@
         }
         tasks.forEach((task, index) => {
             tasksCompleted.innerHTML += `
-     <div class="group bg-white rounded-xl p-4 shadow-sm border border-slate-100 hover:shadow-md hover:border-slate-200 transition-all duration-200  opacity-75" data-task-id="task-1787493091072-kkva6e3">
+     <div class="task-card group bg-white rounded-xl p-4 shadow-sm border border-slate-100 hover:shadow-md hover:border-slate-200 transition-all duration-200  opacity-75" data-drag-status="completed" data-drag-index="${index}">
         <!-- Top Bar -->
         <div class="flex items-center justify-between mb-3">
           <div class="flex items-center gap-2">
@@ -598,4 +590,135 @@
         displayCompletedTasks(completedTasks);
         displayInProgressTasks(inProgressTasks);
     }
+    const DRAG_THRESHOLD = 6;
+    const LONG_PRESS_MS = 250;
+    function listFor(status) {
+        if (status === "todo")
+            return tasks;
+        if (status === "in-progress")
+            return inProgressTasks;
+        return completedTasks;
+    }
+    function moveTask(from, index, to) {
+        if (from === to)
+            return;
+        const task = listFor(from)[index];
+        if (!task)
+            return;
+        listFor(from).splice(index, 1);
+        listFor(to).push(task);
+        localStorage.setItem("TaskHistory", JSON.stringify(tasks));
+        localStorage.setItem("inProgressTasks", JSON.stringify(inProgressTasks));
+        localStorage.setItem("completedTasks", JSON.stringify(completedTasks));
+        displayToDoTasks(tasks);
+        displayInProgressTasks(inProgressTasks);
+        displayCompletedTasks(completedTasks);
+    }
+    const columns = document.querySelectorAll("#columns-container > [data-status]");
+    let pending = null;
+    let dragging = null;
+    function highlightColumn(column) {
+        columns.forEach((c) => c.classList.toggle("ring-2", c === column));
+        columns.forEach((c) => c.classList.toggle("ring-indigo-400", c === column));
+    }
+    function startDrag(card, clientX, clientY) {
+        const rect = card.getBoundingClientRect();
+        const ghost = card.cloneNode(true);
+        ghost.style.cssText = `position:fixed;z-index:100;pointer-events:none;width:${rect.width}px;left:${rect.left}px;top:${rect.top}px;opacity:.9;transform:rotate(2deg);box-shadow:0 10px 25px rgba(0,0,0,.2);`;
+        document.body.appendChild(ghost);
+        card.classList.add("opacity-40");
+        document.body.style.userSelect = "none";
+        dragging = {
+            ghost,
+            card,
+            from: card.dataset.dragStatus,
+            index: Number(card.dataset.dragIndex),
+            offsetX: clientX - rect.left,
+            offsetY: clientY - rect.top,
+            overColumn: null,
+        };
+    }
+    function updateDrag(clientX, clientY) {
+        if (!dragging)
+            return;
+        dragging.ghost.style.left = `${clientX - dragging.offsetX}px`;
+        dragging.ghost.style.top = `${clientY - dragging.offsetY}px`;
+        const el = document.elementFromPoint(clientX, clientY);
+        dragging.overColumn =
+            el?.closest("#columns-container > [data-status]") ??
+                null;
+        highlightColumn(dragging.overColumn);
+    }
+    function endDrag(drop) {
+        clearTimeout(pending?.timer);
+        pending = null;
+        if (!dragging)
+            return;
+        const { ghost, card, from, index, overColumn } = dragging;
+        dragging = null;
+        ghost.remove();
+        card.classList.remove("opacity-40");
+        document.body.style.userSelect = "";
+        highlightColumn(null);
+        if (drop && overColumn) {
+            moveTask(from, index, overColumn.dataset.status);
+        }
+    }
+    document.addEventListener("pointerdown", (e) => {
+        if (e.pointerType === "mouse" && e.button !== 0)
+            return;
+        const target = e.target;
+        if (target.closest("button"))
+            return;
+        const card = target.closest(".task-card");
+        if (!card || !card.dataset.dragStatus)
+            return;
+        pending = {
+            card,
+            pointerId: e.pointerId,
+            pointerType: e.pointerType,
+            startX: e.clientX,
+            startY: e.clientY,
+            timer: undefined,
+        };
+        if (e.pointerType !== "mouse") {
+            const { clientX, clientY } = e;
+            pending.timer = window.setTimeout(() => {
+                if (pending) {
+                    startDrag(pending.card, clientX, clientY);
+                    pending = null;
+                }
+            }, LONG_PRESS_MS);
+        }
+    });
+    document.addEventListener("pointermove", (e) => {
+        if (dragging) {
+            updateDrag(e.clientX, e.clientY);
+            return;
+        }
+        if (!pending || e.pointerId !== pending.pointerId)
+            return;
+        const moved = Math.hypot(e.clientX - pending.startX, e.clientY - pending.startY);
+        if (pending.pointerType === "mouse") {
+            if (moved > DRAG_THRESHOLD) {
+                startDrag(pending.card, e.clientX, e.clientY);
+                pending = null;
+                updateDrag(e.clientX, e.clientY);
+            }
+        }
+        else if (moved > DRAG_THRESHOLD) {
+            clearTimeout(pending.timer);
+            pending = null;
+        }
+    });
+    document.addEventListener("pointerup", () => endDrag(true));
+    document.addEventListener("pointercancel", () => endDrag(false));
+    document.addEventListener("touchmove", (e) => {
+        if (dragging)
+            e.preventDefault();
+    }, { passive: false });
+    document.addEventListener("contextmenu", (e) => {
+        if (dragging || pending)
+            e.preventDefault();
+    });
 })();
