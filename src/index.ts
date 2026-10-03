@@ -114,6 +114,10 @@
     modalOverlay?.classList.add("flex");
   }
   addTaskBtn?.addEventListener("click", (e) => {
+    // Start from a blank form, even if an earlier edit was cancelled.
+    currentIndex = undefined;
+    currentProgressIndex = undefined;
+    clearForum();
     openModal();
   });
 
@@ -254,7 +258,7 @@
 
   function clearForum(): void {
     taskTitle!.value = "";
-    taskPriority!.value = "";
+    taskPriority!.value = "medium";
     taskDueDate!.value = "";
     taskDescription!.value = "";
 
@@ -361,7 +365,7 @@
   function editTask(index: number): void {
     currentIndex = index;
     taskTitle!.value = tasks[index].title;
-    taskPriority!.value = tasks[index].priority ? tasks[index].priority : "";
+    taskPriority!.value = tasks[index].priority || "medium";
     taskDueDate!.value = tasks[index].date ? tasks[index].date : "";
     taskDescription!.value = tasks[index].description
       ? tasks[index].description
@@ -510,9 +514,7 @@
   function editProgressTask(index: number): void {
     currentProgressIndex = index;
     taskTitle!.value = inProgressTasks[index].title;
-    taskPriority!.value = inProgressTasks[index].priority
-      ? inProgressTasks[index].priority
-      : "";
+    taskPriority!.value = inProgressTasks[index].priority || "medium";
     taskDueDate!.value = inProgressTasks[index].date
       ? inProgressTasks[index].date
       : "";
@@ -611,7 +613,7 @@
       if (!task) return;
 
       taskTitle!.value = task.title;
-      taskPriority!.value = task.priority ?? "";
+      taskPriority!.value = task.priority || "medium";
       taskDueDate!.value = task.date ?? "";
       taskDescription!.value = task.description ?? "";
 
