@@ -17,13 +17,34 @@
     const todoCounter = document.querySelector("#todo-counter");
     const tasksInProgress = document.querySelector("#tasks-in-progress");
     const inProgressCounter = document.querySelector("#inprogress-counter");
-    let tasks = JSON.parse(localStorage.getItem("TaskHistory") ?? "[]");
+    function nextId() {
+        const id = Number(localStorage.getItem("taskIdCounter") ?? "0") + 1;
+        localStorage.setItem("taskIdCounter", String(id));
+        return id;
+    }
+    function formatId(id) {
+        return String(id).padStart(3, "0");
+    }
+    function loadTasks(key) {
+        const saved = JSON.parse(localStorage.getItem(key) ?? "[]");
+        let changed = false;
+        saved.forEach((task) => {
+            if (typeof task.id !== "number") {
+                task.id = nextId();
+                changed = true;
+            }
+        });
+        if (changed)
+            localStorage.setItem(key, JSON.stringify(saved));
+        return saved;
+    }
+    let tasks = loadTasks("TaskHistory");
     displayToDoTasks(tasks);
     let currentIndex = undefined;
-    let inProgressTasks = JSON.parse(localStorage.getItem("inProgressTasks") ?? "[]");
+    let inProgressTasks = loadTasks("inProgressTasks");
     displayInProgressTasks(inProgressTasks);
     let currentProgressIndex = undefined;
-    let completedTasks = JSON.parse(localStorage.getItem("completedTasks") ?? "[]");
+    let completedTasks = loadTasks("completedTasks");
     displayCompletedTasks(completedTasks);
     function closeModal() {
         modalOverlay?.classList.add("hidden");
@@ -78,6 +99,7 @@
     });
     function addNewTask() {
         const newTask = {
+            id: 0,
             title: taskTitle.value,
             priority: taskPriority?.value,
             date: taskDueDate?.value,
@@ -86,21 +108,27 @@
         };
         const completedIndex = submitBtn?.dataset.completedIndex;
         if (completedIndex !== undefined) {
+            const old = completedTasks[Number(completedIndex)];
+            newTask.id = old.id;
+            newTask.createdAt = old.createdAt ?? newTask.createdAt;
             completedTasks[Number(completedIndex)] = newTask;
             delete submitBtn.dataset.completedIndex;
         }
         else if (currentIndex !== undefined) {
+            newTask.id = tasks[currentIndex].id;
             newTask.createdAt = tasks[currentIndex].createdAt ?? newTask.createdAt;
             tasks[currentIndex] = newTask;
             currentIndex = undefined;
         }
         else if (currentProgressIndex !== undefined) {
+            newTask.id = inProgressTasks[currentProgressIndex].id;
             newTask.createdAt =
                 inProgressTasks[currentProgressIndex].createdAt ?? newTask.createdAt;
             inProgressTasks[currentProgressIndex] = newTask;
             currentProgressIndex = undefined;
         }
         else {
+            newTask.id = nextId();
             tasks.push(newTask);
         }
         localStorage.setItem("TaskHistory", JSON.stringify(tasks));
@@ -141,7 +169,7 @@
         <div class="flex items-center justify-between mb-3">
           <div class="flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-slate-300"></span>
-            <span class="text-[10px] font-medium text-slate-400 uppercase tracking-wider">#${String(index + 1).padStart(3, "0")}</span>
+            <span class="text-[10px] font-medium text-slate-400 uppercase tracking-wider">#${formatId(task.id)}</span>
           </div>
           <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
             <button class="edit-btn text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 w-7 h-7 rounded-lg flex items-center justify-center transition-colors" data-index="${index}" title="Edit task">
@@ -284,7 +312,7 @@
         <div class="flex items-center justify-between mb-3">
           <div class="flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-amber-400"></span>
-            <span class="text-[10px] font-medium text-slate-400 uppercase tracking-wider">#002</span>
+            <span class="text-[10px] font-medium text-slate-400 uppercase tracking-wider">#${formatId(task.id)}</span>
           </div>
           <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
             <button class="edit-btn text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 w-7 h-7 rounded-lg flex items-center justify-center transition-colors" data-index="${index}" title="Edit task">
@@ -484,7 +512,7 @@
         <div class="flex items-center justify-between mb-3">
           <div class="flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-            <span class="text-[10px] font-medium text-slate-400 uppercase tracking-wider">#002</span>
+            <span class="text-[10px] font-medium text-slate-400 uppercase tracking-wider">#${formatId(task.id)}</span>
           </div>
           <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
   <button

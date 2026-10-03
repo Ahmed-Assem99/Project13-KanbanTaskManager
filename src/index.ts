@@ -29,6 +29,7 @@
   const inProgressCounter = document.querySelector("#inprogress-counter");
 
   interface Task {
+    id: number;
     title: string;
     priority?: string;
     date?: string;
@@ -36,21 +37,40 @@
     createdAt?: string;
   }
 
-  let tasks: Array<Task> = JSON.parse(
-    localStorage.getItem("TaskHistory") ?? "[]",
-  );
+  // Task IDs come from one counter so they stay unique across all columns.
+  function nextId(): number {
+    const id = Number(localStorage.getItem("taskIdCounter") ?? "0") + 1;
+    localStorage.setItem("taskIdCounter", String(id));
+    return id;
+  }
+
+  function formatId(id: number): string {
+    return String(id).padStart(3, "0");
+  }
+
+  // Loads a column from localStorage, giving an ID to any task saved before IDs existed.
+  function loadTasks(key: string): Array<Task> {
+    const saved: Array<Task> = JSON.parse(localStorage.getItem(key) ?? "[]");
+    let changed = false;
+    saved.forEach((task) => {
+      if (typeof task.id !== "number") {
+        task.id = nextId();
+        changed = true;
+      }
+    });
+    if (changed) localStorage.setItem(key, JSON.stringify(saved));
+    return saved;
+  }
+
+  let tasks: Array<Task> = loadTasks("TaskHistory");
   displayToDoTasks(tasks);
   let currentIndex: number | undefined = undefined;
 
-  let inProgressTasks: Array<Task> = JSON.parse(
-    localStorage.getItem("inProgressTasks") ?? "[]",
-  );
+  let inProgressTasks: Array<Task> = loadTasks("inProgressTasks");
   displayInProgressTasks(inProgressTasks);
   let currentProgressIndex: number | undefined = undefined;
 
-  let completedTasks: Array<Task> = JSON.parse(
-    localStorage.getItem("completedTasks") ?? "[]",
-  );
+  let completedTasks: Array<Task> = loadTasks("completedTasks");
   displayCompletedTasks(completedTasks);
   //-------Modal Overlay Features------///
   function closeModal(): void {
@@ -134,6 +154,7 @@
   //-------------Todo Tasks Features---------------//
   function addNewTask(): void {
     const newTask: Task = {
+      id: 0,
       title: taskTitle!.value,
       priority: taskPriority?.value,
       date: taskDueDate?.value,
@@ -146,6 +167,9 @@
     const completedIndex = submitBtn?.dataset.completedIndex;
 
     if (completedIndex !== undefined) {
+      const old = completedTasks[Number(completedIndex)];
+      newTask.id = old.id;
+      newTask.createdAt = old.createdAt ?? newTask.createdAt;
       completedTasks[Number(completedIndex)] = newTask;
 
       delete submitBtn!.dataset.completedIndex;
@@ -153,6 +177,7 @@
 
 
     else if (currentIndex !== undefined) {
+      newTask.id = tasks[currentIndex].id;
       newTask.createdAt = tasks[currentIndex].createdAt ?? newTask.createdAt;
 
       tasks[currentIndex] = newTask;
@@ -162,6 +187,7 @@
 
 
     else if (currentProgressIndex !== undefined) {
+      newTask.id = inProgressTasks[currentProgressIndex].id;
       newTask.createdAt =
         inProgressTasks[currentProgressIndex].createdAt ?? newTask.createdAt;
 
@@ -172,6 +198,7 @@
 
 
     else {
+      newTask.id = nextId();
       tasks.push(newTask);
     }
 
@@ -225,7 +252,7 @@
         <div class="flex items-center justify-between mb-3">
           <div class="flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-slate-300"></span>
-            <span class="text-[10px] font-medium text-slate-400 uppercase tracking-wider">#${String(index + 1).padStart(3, "0")}</span>
+            <span class="text-[10px] font-medium text-slate-400 uppercase tracking-wider">#${formatId(task.id)}</span>
           </div>
           <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
             <button class="edit-btn text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 w-7 h-7 rounded-lg flex items-center justify-center transition-colors" data-index="${index}" title="Edit task">
@@ -387,7 +414,7 @@
         <div class="flex items-center justify-between mb-3">
           <div class="flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-amber-400"></span>
-            <span class="text-[10px] font-medium text-slate-400 uppercase tracking-wider">#002</span>
+            <span class="text-[10px] font-medium text-slate-400 uppercase tracking-wider">#${formatId(task.id)}</span>
           </div>
           <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
             <button class="edit-btn text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 w-7 h-7 rounded-lg flex items-center justify-center transition-colors" data-index="${index}" title="Edit task">
@@ -682,7 +709,7 @@
         <div class="flex items-center justify-between mb-3">
           <div class="flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-            <span class="text-[10px] font-medium text-slate-400 uppercase tracking-wider">#002</span>
+            <span class="text-[10px] font-medium text-slate-400 uppercase tracking-wider">#${formatId(task.id)}</span>
           </div>
           <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
   <button
